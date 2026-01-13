@@ -1,13 +1,972 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AIStock Dashboard</title>
-    <script type="module" crossorigin src="/aistock/assets/index-BYCAUYqz.js"></script>
-    <link rel="stylesheet" crossorigin href="/aistock/assets/index-8FpdO3Km.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AIStock 控制台</title>
+  <base href="/aistock/" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #111a33;
+      --panel2: #0f1730;
+      --text: #e6e9f2;
+      --muted: #a9b2c8;
+      --line: rgba(255,255,255,0.08);
+      --accent: #78a9ff;
+      --good: #6ee7b7;
+      --warn: #fbbf24;
+      --bad: #fb7185;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(120,169,255,0.18), transparent 60%),
+                  radial-gradient(900px 500px at 85% 20%, rgba(110,231,183,0.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      height: 100%;
+    }
+
+    .side {
+      border-right: 1px solid var(--line);
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(17,26,51,0.95), rgba(15,23,48,0.75));
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(120,169,255,0.9), rgba(110,231,183,0.85));
+      display: grid;
+      place-items: center;
+      color: #081024;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .brand h1 {
+      font-size: 15px;
+      margin: 0;
+      line-height: 1.1;
+    }
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      color: var(--muted);
+    }
+
+    .nav a:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+
+    .nav a.active {
+      background: rgba(120,169,255,0.14);
+      border-color: rgba(120,169,255,0.25);
+      color: var(--text);
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      opacity: 0.95;
+      flex: 0 0 auto;
+    }
+
+    .main {
+      padding: 22px;
+      overflow: auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      display: grid;
+      gap: 4px;
+    }
+
+    .title h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+    }
+
+    .title .sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--muted);
+    }
+
+    .dot.good { background: var(--good); }
+    .dot.warn { background: var(--warn); }
+    .dot.bad { background: var(--bad); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      background: rgba(17,26,51,0.72);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      overflow: hidden;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    .kpi {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .kpi .big {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+    }
+
+    .kpi .small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      background: rgba(120,169,255,0.12);
+      border: 1px solid rgba(120,169,255,0.25);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .btn:hover { filter: brightness(1.05); }
+
+    .btn.ghost {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.08);
+      color: var(--muted);
+    }
+
+    .btn.bad {
+      background: rgba(251,113,133,0.12);
+      border-color: rgba(251,113,133,0.25);
+    }
+
+    .input, textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      color: var(--text);
+      padding: 10px 12px;
+      outline: none;
+      font-family: var(--sans);
+    }
+
+    textarea { min-height: 160px; resize: vertical; font-family: var(--mono); font-size: 12px; }
+
+    .hint { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { color: var(--muted); font-weight: 600; }
+
+    .mono { font-family: var(--mono); }
+
+    .tag {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: min(420px, calc(100vw - 40px));
+      background: rgba(17,26,51,0.95);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px;
+      padding: 12px 12px;
+      box-shadow: var(--shadow);
+      display: none;
+      z-index: 50;
+    }
+
+    .toast.show { display: block; }
+    .toast .t { font-weight: 700; font-size: 12px; margin-bottom: 6px; }
+    .toast .m { color: var(--muted); font-size: 12px; white-space: pre-wrap; }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .side { display: none; }
+      .split { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: repeat(6, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="brand">
+        <div class="logo">S³</div>
+        <div>
+          <h1>AIStock 控制台</h1>
+          <p>数据工厂 · 待打标 · iFinD 自动拉取</p>
+        </div>
+      </div>
+
+      <div class="nav" id="nav">
+        <a href="#/dashboard" data-route="dashboard" class="active">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 12.5V20h6v-5h4v5h6v-7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 11l9-8 9 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          总览
+        </a>
+        <a href="#/candidates" data-route="candidates">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M8 6h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 12h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 18h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+          待打标候选
+        </a>
+        <a href="#/watchlist" data-route="watchlist">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.4-7-11a7 7 0 0 1 14 0c0 6.6-7 11-7 11Z" stroke="currentColor" stroke-width="1.8"/></svg>
+          重点观察池
+        </a>
+        <a href="#/tasks" data-route="tasks">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M8 7h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 12h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 17h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 7l1 1 2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12l1 1 2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 17l1 1 2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          数据任务
+        </a>
+        <a href="#/lab" data-route="lab">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M10 2v6l-6 10a2 2 0 0 0 1.7 3h12.6a2 2 0 0 0 1.7-3L14 8V2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 14h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          股票实验室
+        </a>
+        <a href="#/settings" data-route="settings">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a7.7 7.7 0 0 0 .1-1 7.7 7.7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a8.2 8.2 0 0 0-1.7-1l-.3-2.6h-4l-.3 2.6a8.2 8.2 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7.7 7.7 0 0 0-.1 1 7.7 7.7 0 0 0 .1 1l-2 1.5 2 3.5 2.4-1a8.2 8.2 0 0 0 1.7 1l.3 2.6h4l.3-2.6a8.2 8.2 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          系统设置
+        </a>
+      </div>
+
+      <div style="margin-top: 16px;" class="hint">
+        <div class="tag"><span class="dot good"></span> 在线</div>
+        <div class="tag"><span class="dot warn"></span> 数据拉取进行中</div>
+        <div class="tag"><span class="dot bad"></span> 需要关注</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <h2 id="pageTitle">总览</h2>
+          <div class="sub" id="pageSub">系统状态、候选池、观察池与数据任务的统一视图</div>
+        </div>
+        <div class="row">
+          <div class="pill" id="pillStatus"><span class="dot"></span><span>连接中...</span></div>
+          <button class="btn ghost" id="btnRefresh">刷新</button>
+        </div>
+      </div>
+
+      <div id="view"></div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">
+    <div class="t" id="toastTitle"></div>
+    <div class="m" id="toastMsg"></div>
+  </div>
+
+<script>
+(() => {
+  const API = '/aistock/api';
+
+  const $ = (sel) => document.querySelector(sel);
+  const view = $('#view');
+  const nav = $('#nav');
+  const pageTitle = $('#pageTitle');
+  const pageSub = $('#pageSub');
+  const pillStatus = $('#pillStatus');
+  const btnRefresh = $('#btnRefresh');
+
+  const toast = $('#toast');
+  const toastTitle = $('#toastTitle');
+  const toastMsg = $('#toastMsg');
+  let toastTimer = null;
+
+  function showToast(title, msg) {
+    toastTitle.textContent = title;
+    toastMsg.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 4200);
+  }
+
+  async function apiGet(path) {
+    const r = await fetch(API + path, { headers: { 'Accept': 'application/json' } });
+    const t = await r.text();
+    let data = null;
+    try { data = t ? JSON.parse(t) : null; } catch { data = t; }
+    if (!r.ok) {
+      throw new Error(`${r.status} ${r.statusText}\n${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}`);
+    }
+    return data;
+  }
+
+  async function apiSend(method, path, body) {
+    const r = await fetch(API + path, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body ?? {})
+    });
+    const t = await r.text();
+    let data = null;
+    try { data = t ? JSON.parse(t) : null; } catch { data = t; }
+    if (!r.ok) {
+      throw new Error(`${r.status} ${r.statusText}\n${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}`);
+    }
+    return data;
+  }
+
+  const apiPost = (p, b) => apiSend('POST', p, b);
+  const apiPatch = (p, b) => apiSend('PATCH', p, b);
+
+  function fmtDay(yyyymmdd) {
+    if (!yyyymmdd || String(yyyymmdd).length !== 8) return String(yyyymmdd || '');
+    const s = String(yyyymmdd);
+    return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  async function refreshPill() {
+    try {
+      const st = await apiGet('/status');
+      const ok = !st.panic_halt && !st.veto;
+      pillStatus.innerHTML = `<span class="dot ${ok ? 'good' : 'bad'}"></span><span>${ok ? '系统正常' : '需要关注'} · ${escapeHtml(st.time)}</span>`;
+    } catch (e) {
+      pillStatus.innerHTML = `<span class="dot bad"></span><span>后端不可用</span>`;
+    }
+  }
+
+  function setActiveNav(route) {
+    [...nav.querySelectorAll('a')].forEach(a => a.classList.toggle('active', a.dataset.route === route));
+  }
+
+  function setTitle(route) {
+    const meta = {
+      dashboard: ['总览', '系统状态、候选池、观察池与数据任务的统一视图'],
+      candidates: ['待打标候选', '上传/查看候选数据，上传后系统将自动规划并拉取 iFinD 数据'],
+      watchlist: ['重点观察池', '多次触发标准的股票会进入观察池，系统会持续扩维并更新数据快照'],
+      tasks: ['数据任务', '查看数据拉取队列、状态、错误信息与回执'],
+      lab: ['股票实验室', '按股票查看自动生成的特征快照（持续更新）'],
+      settings: ['系统设置', '查看当前后端配置（环境变量控制）']
+    };
+    const [t, s] = meta[route] || meta.dashboard;
+    pageTitle.textContent = t;
+    pageSub.textContent = s;
+  }
+
+  function route() {
+    const h = (location.hash || '#/dashboard').replace('#/', '');
+    return h.split('?')[0] || 'dashboard';
+  }
+
+  function render(html) {
+    view.innerHTML = html;
+  }
+
+  async function renderDashboard() {
+    render(`
+      <div class="grid">
+        <div class="card" style="grid-column: span 4;">
+          <h3>系统状态</h3>
+          <div class="kpi"><div class="big" id="kpiGuard">-</div><div class="small" id="kpiVeto">加载中...</div></div>
+        </div>
+        <div class="card" style="grid-column: span 4;">
+          <h3>观察池规模</h3>
+          <div class="kpi"><div class="big" id="kpiWatch">-</div><div class="small">活跃 / 总数</div></div>
+        </div>
+        <div class="card" style="grid-column: span 4;">
+          <h3>数据任务</h3>
+          <div class="kpi"><div class="big" id="kpiTasks">-</div><div class="small">最近 50 条</div></div>
+        </div>
+
+        <div class="card" style="grid-column: span 8;">
+          <h3>最近数据任务</h3>
+          <div class="hint" style="margin-bottom: 10px;">查看系统近期在拉取哪些维度的数据（由自动规划器决定）。</div>
+          <div style="overflow:auto;">
+            <table>
+              <thead><tr>
+                <th>时间</th><th>股票</th><th>用途</th><th>端点</th><th>状态</th><th>错误</th>
+              </tr></thead>
+              <tbody id="tblRecentTasks"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column: span 4;">
+          <h3>快捷操作</h3>
+          <div class="row" style="margin-bottom: 10px;">
+            <button class="btn" id="btnGoUpload">上传候选</button>
+            <button class="btn ghost" id="btnGoLab">打开实验室</button>
+          </div>
+          <div class="hint">
+            自动拉取是否启用：<span class="mono" id="kpiAutoFetch">加载中...</span><br/>
+            iFinD 模式：<span class="mono" id="kpiProvider">加载中...</span>
+          </div>
+        </div>
+      </div>
+    `);
+
+    try {
+      const [st, wl, reqs, ls] = await Promise.all([
+        apiGet('/status'),
+        apiGet('/ui/watchlist?limit=500'),
+        apiGet('/data_requests?limit=50'),
+        apiGet('/ui/labeling_settings')
+      ]);
+
+      $('#kpiGuard').textContent = `G${st.guard_level}`;
+      $('#kpiVeto').textContent = st.veto ? `VETO: ${st.veto_code || '未知'}` : '无阻断';
+
+      const active = wl.filter(x => x.active).length;
+      $('#kpiWatch').textContent = `${active} / ${wl.length}`;
+
+      $('#kpiTasks').textContent = String(reqs.length);
+
+      const rows = reqs.slice(0, 12).map(r => {
+        const err = r.last_error ? `<span class="mono" style="color: var(--bad);">${escapeHtml(r.last_error)}</span>` : '';
+        return `<tr>
+          <td class="mono">${escapeHtml((r.created_at||'').slice(0,19).replace('T',' '))}</td>
+          <td class="mono">${escapeHtml(r.symbol || '')}</td>
+          <td>${escapeHtml(r.purpose)}</td>
+          <td class="mono">${escapeHtml(r.endpoint)}</td>
+          <td>${escapeHtml(r.status)}</td>
+          <td>${err}</td>
+        </tr>`;
+      }).join('');
+      $('#tblRecentTasks').innerHTML = rows || `<tr><td colspan="6" class="hint">暂无</td></tr>`;
+
+      $('#kpiAutoFetch').textContent = ls.auto_fetch_enabled ? '已启用' : '未启用（需在 backend.env 打开）';
+      $('#kpiProvider').textContent = (ls.auto_fetch_enabled ? 'IFIND_HTTP / MOCK 由后端配置决定' : 'IFIND_HTTP / MOCK 由后端配置决定');
+
+    } catch (e) {
+      showToast('加载失败', String(e));
+    }
+
+    $('#btnGoUpload').onclick = () => location.hash = '#/candidates';
+    $('#btnGoLab').onclick = () => location.hash = '#/lab';
+  }
+
+  function parseItemsFromText(text) {
+    const s = (text || '').trim();
+    if (!s) return [];
+
+    // 1) JSON: either list or {items:[...]}
+    if (s.startsWith('[') || s.startsWith('{')) {
+      try {
+        const obj = JSON.parse(s);
+        if (Array.isArray(obj)) return obj;
+        if (obj && Array.isArray(obj.items)) return obj.items;
+      } catch (e) {
+        // fallthrough
+      }
+    }
+
+    // 2) CSV/TSV-ish: symbol,name,p_limit_up
+    const lines = s.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+    const out = [];
+    for (const line of lines) {
+      if (line.startsWith('#')) continue;
+      const parts = line.split(/[\t,\s]+/).filter(Boolean);
+      if (!parts.length) continue;
+      const symbol = parts[0];
+      const name = parts.length >= 2 ? parts[1] : '';
+      const p = parts.length >= 3 ? Number(parts[2]) : 0.0;
+      out.push({ symbol, name, p_limit_up: isFinite(p) ? p : 0.0 });
+    }
+    return out;
+  }
+
+  async function renderCandidates() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth()+1).padStart(2,'0');
+    const dd = String(today.getDate()).padStart(2,'0');
+    const defaultDay = `${yyyy}-${mm}-${dd}`;
+
+    render(`
+      <div class="split">
+        <div class="card">
+          <h3>上传候选（待打标）</h3>
+          <div class="hint">支持两种格式：<br/>
+            1）JSON：<span class="mono">[{"symbol":"000001.SZ","name":"平安银行","p_limit_up":0.23}, ...]</span><br/>
+            2）文本行：<span class="mono">symbol name p_limit_up</span> 或 CSV（空格/逗号/Tab 分隔）
+          </div>
+          <div style="height: 10px;"></div>
+          <div class="row">
+            <div style="flex: 1; min-width: 220px;">
+              <div class="hint">交易日（北京时间）</div>
+              <input class="input" id="inDay" type="date" value="${defaultDay}" />
+            </div>
+            <div style="flex: 1; min-width: 220px;">
+              <div class="hint">用途说明（可选）</div>
+              <input class="input" id="inNote" placeholder="例如：涨停候选 / 盘中触发" />
+            </div>
+          </div>
+          <div style="height: 10px;"></div>
+          <textarea id="inItems" placeholder="# 示例：\n000001.SZ 平安银行 0.23\n600000.SH 浦发银行 0.18\n\n# 或直接贴 JSON"></textarea>
+          <div style="height: 10px;"></div>
+          <div class="row">
+            <button class="btn" id="btnUpload">提交并自动拉取</button>
+            <button class="btn ghost" id="btnLoad">查看当天候选</button>
+          </div>
+          <div style="height: 10px;"></div>
+          <div class="hint" id="uploadResult"></div>
+        </div>
+
+        <div class="card">
+          <h3>当天候选列表</h3>
+          <div class="row">
+            <div style="flex: 1; min-width: 220px;">
+              <div class="hint">查询交易日</div>
+              <input class="input" id="qDay" type="date" value="${defaultDay}" />
+            </div>
+            <button class="btn ghost" id="btnQuery">查询</button>
+          </div>
+          <div style="height: 10px;"></div>
+          <div style="overflow:auto;">
+            <table>
+              <thead><tr>
+                <th>排名</th><th>股票</th><th>名称</th><th>概率</th><th>输入时间</th><th></th>
+              </tr></thead>
+              <tbody id="tblCandidates"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `);
+
+    async function load(day) {
+      const d = (day || '').trim();
+      if (!d) return;
+      try {
+        const items = await apiGet(`/ui/signal_inputs?day=${encodeURIComponent(d)}`);
+        const rows = items.map((r, idx) => {
+          const p = (r.p_limit_up ?? 0);
+          const pct = (p <= 1 ? (p*100) : p).toFixed(2) + '%';
+          return `<tr>
+            <td>${idx+1}</td>
+            <td class="mono">${escapeHtml(r.symbol)}</td>
+            <td>${escapeHtml(r.name || '')}</td>
+            <td>${pct}</td>
+            <td class="mono">${escapeHtml((r.input_ts||'').slice(0,19).replace('T',' '))}</td>
+            <td><button class="btn ghost" data-symbol="${escapeHtml(r.symbol)}">查看</button></td>
+          </tr>`;
+        }).join('');
+        $('#tblCandidates').innerHTML = rows || `<tr><td colspan="6" class="hint">暂无数据</td></tr>`;
+
+        [...view.querySelectorAll('button[data-symbol]')].forEach(btn => {
+          btn.onclick = () => {
+            const sym = btn.getAttribute('data-symbol');
+            location.hash = '#/lab?symbol=' + encodeURIComponent(sym);
+          };
+        });
+      } catch (e) {
+        showToast('查询失败', String(e));
+      }
+    }
+
+    $('#btnQuery').onclick = () => load($('#qDay').value);
+    $('#btnLoad').onclick = () => load($('#inDay').value);
+
+    $('#btnUpload').onclick = async () => {
+      const day = $('#inDay').value;
+      const note = ($('#inNote').value || '').trim();
+      const raw = $('#inItems').value;
+      const items = parseItemsFromText(raw);
+      if (!items.length) {
+        showToast('没有数据', '请粘贴候选列表（JSON 或 行文本）');
+        return;
+      }
+      try {
+        const payload = { day, items: items.map(x => ({...x, note})) };
+        const res = await apiPost('/ui/signal_inputs', payload);
+        $('#uploadResult').textContent = `已处理：新增 ${res.created}，更新 ${res.updated}，合计 ${res.total}。\n自动规划的数据请求：${res.planned_requests ?? 0} 条。\n目标日：${res.target_day}。`;
+        showToast('提交成功', '候选已入库。若启用了自动拉取，系统会开始规划并拉取 iFinD 数据。');
+        await load(day);
+      } catch (e) {
+        showToast('提交失败', String(e));
+      }
+    };
+
+    $('#btnLoad').click();
+  }
+
+  async function renderWatchlist() {
+    render(`
+      <div class="card">
+        <h3>重点观察池（持续扩维）</h3>
+        <div class="hint">说明：同一只股票在不同时间多次触发标准会累积 hit_count。系统会用 hit_count 驱动更频繁、更丰富的 iFinD 维度拉取，并持续生成特征快照。</div>
+        <div style="height: 10px;"></div>
+        <div class="row">
+          <button class="btn ghost" id="btnReload">刷新</button>
+        </div>
+        <div style="height: 10px;"></div>
+        <div style="overflow:auto;">
+          <table>
+            <thead><tr>
+              <th>股票</th><th>首次出现</th><th>最近出现</th><th>触发次数</th><th>状态</th><th>下次刷新</th><th></th>
+            </tr></thead>
+            <tbody id="tblWatch"></tbody>
+          </table>
+        </div>
+      </div>
+    `);
+
+    async function load() {
+      try {
+        const rows = await apiGet('/ui/watchlist?limit=500');
+        const html = rows.map(r => {
+          const state = r.active ? `<span class="tag"><span class="dot good"></span>活跃</span>` : `<span class="tag"><span class="dot bad"></span>暂停</span>`;
+          const next = r.next_refresh_at ? r.next_refresh_at.slice(0,19).replace('T',' ') : '-';
+          const btn = r.active
+            ? `<button class="btn bad" data-act="pause" data-symbol="${escapeHtml(r.symbol)}">暂停</button>`
+            : `<button class="btn" data-act="resume" data-symbol="${escapeHtml(r.symbol)}">恢复</button>`;
+          return `<tr>
+            <td class="mono">${escapeHtml(r.symbol)}</td>
+            <td class="mono">${fmtDay(r.first_seen_day)}</td>
+            <td class="mono">${fmtDay(r.last_seen_day)}</td>
+            <td>${escapeHtml(r.hit_count)}</td>
+            <td>${state}</td>
+            <td class="mono">${escapeHtml(next)}</td>
+            <td>
+              <button class="btn ghost" data-act="lab" data-symbol="${escapeHtml(r.symbol)}">查看快照</button>
+              ${btn}
+            </td>
+          </tr>`;
+        }).join('');
+        $('#tblWatch').innerHTML = html || `<tr><td colspan="7" class="hint">暂无</td></tr>`;
+
+        [...view.querySelectorAll('button[data-act]')].forEach(btn => {
+          btn.onclick = async () => {
+            const act = btn.getAttribute('data-act');
+            const sym = btn.getAttribute('data-symbol');
+            if (act === 'lab') {
+              location.hash = '#/lab?symbol=' + encodeURIComponent(sym);
+              return;
+            }
+            try {
+              await apiPatch(`/ui/watchlist/${encodeURIComponent(sym)}`, { active: act !== 'pause' });
+              showToast('已更新', `${sym}：${act === 'pause' ? '已暂停' : '已恢复'}`);
+              await load();
+            } catch (e) {
+              showToast('更新失败', String(e));
+            }
+          };
+        });
+      } catch (e) {
+        showToast('加载失败', String(e));
+      }
+    }
+
+    $('#btnReload').onclick = load;
+    await load();
+  }
+
+  async function renderTasks() {
+    render(`
+      <div class="card">
+        <h3>数据任务队列</h3>
+        <div class="row">
+          <div style="flex: 1; min-width: 220px;">
+            <div class="hint">状态过滤（可选：PENDING/SENT/RECEIVED/FAILED）</div>
+            <input class="input" id="inStatus" placeholder="例如：FAILED" />
+          </div>
+          <button class="btn ghost" id="btnQuery">查询</button>
+        </div>
+        <div style="height: 10px;"></div>
+        <div style="overflow:auto;">
+          <table>
+            <thead><tr>
+              <th>时间</th><th>股票</th><th>用途</th><th>端点</th><th>状态</th><th>尝试</th><th>错误</th>
+            </tr></thead>
+            <tbody id="tblTasks"></tbody>
+          </table>
+        </div>
+      </div>
+    `);
+
+    async function load() {
+      const st = ($('#inStatus').value || '').trim();
+      const q = st ? `?status=${encodeURIComponent(st)}&limit=80` : `?limit=80`;
+      try {
+        const rows = await apiGet('/data_requests' + q);
+        const html = rows.map(r => {
+          const err = r.last_error ? `<span class="mono" style="color: var(--bad);">${escapeHtml(r.last_error)}</span>` : '';
+          return `<tr>
+            <td class="mono">${escapeHtml((r.created_at||'').slice(0,19).replace('T',' '))}</td>
+            <td class="mono">${escapeHtml(r.symbol || '')}</td>
+            <td>${escapeHtml(r.purpose)}</td>
+            <td class="mono">${escapeHtml(r.endpoint)}</td>
+            <td>${escapeHtml(r.status)}</td>
+            <td>${escapeHtml(r.attempts)}</td>
+            <td>${err}</td>
+          </tr>`;
+        }).join('');
+        $('#tblTasks').innerHTML = html || `<tr><td colspan="7" class="hint">暂无</td></tr>`;
+      } catch (e) {
+        showToast('查询失败', String(e));
+      }
+    }
+
+    $('#btnQuery').onclick = load;
+    await load();
+  }
+
+  function getQuery() {
+    const h = location.hash || '';
+    const i = h.indexOf('?');
+    const qs = i >= 0 ? h.slice(i+1) : '';
+    const out = {};
+    for (const part of qs.split('&')) {
+      if (!part) continue;
+      const [k,v] = part.split('=');
+      out[decodeURIComponent(k)] = decodeURIComponent(v || '');
+    }
+    return out;
+  }
+
+  async function renderLab() {
+    const q = getQuery();
+    const defaultSymbol = q.symbol || '';
+
+    render(`
+      <div class="card">
+        <h3>股票实验室</h3>
+        <div class="hint">输入股票代码（例如 <span class="mono">000001.SZ</span>），查看系统自动生成的特征快照（持续更新）。</div>
+        <div style="height: 10px;"></div>
+        <div class="row">
+          <input class="input" id="inSymbol" style="max-width: 320px;" placeholder="股票代码" value="${escapeHtml(defaultSymbol)}" />
+          <button class="btn" id="btnLoad">加载快照</button>
+          <button class="btn ghost" id="btnOpenWatch">打开观察池</button>
+        </div>
+        <div style="height: 10px;"></div>
+        <div id="labHead" class="hint"></div>
+        <div style="height: 10px;"></div>
+        <div style="overflow:auto;">
+          <table>
+            <thead><tr>
+              <th>时间</th><th>特征集</th><th>摘要</th><th>请求数</th>
+            </tr></thead>
+            <tbody id="tblSnaps"></tbody>
+          </table>
+        </div>
+      </div>
+    `);
+
+    async function load() {
+      const sym = ($('#inSymbol').value || '').trim();
+      if (!sym) { showToast('请输入股票代码', '例如：000001.SZ'); return; }
+      try {
+        const [snaps, wl] = await Promise.all([
+          apiGet(`/ui/symbol/${encodeURIComponent(sym)}/snapshots?limit=80`),
+          apiGet('/ui/watchlist?limit=500')
+        ]);
+        const w = wl.find(x => x.symbol === sym);
+        $('#labHead').innerHTML = w
+          ? `观察池：<span class="mono">${escapeHtml(sym)}</span> · 触发次数：<b>${escapeHtml(w.hit_count)}</b> · 状态：${w.active ? '活跃' : '暂停'}`
+          : `观察池：<span class="mono">${escapeHtml(sym)}</span> · 尚未进入（上传候选后会自动进入）`;
+
+        const rows = snaps.map(s => {
+          const asof = (s.asof_ts||'').slice(0,19).replace('T',' ');
+          const f = s.features || {};
+          const summary = f.summary || f.rt || f.hist || f.hf || f;
+          const small = escapeHtml(typeof summary === 'string' ? summary : JSON.stringify(summary));
+          const reqn = Array.isArray(s.request_ids) ? s.request_ids.length : 0;
+          return `<tr>
+            <td class="mono">${escapeHtml(asof)}</td>
+            <td class="mono">${escapeHtml(s.feature_set)}</td>
+            <td class="mono">${small.slice(0, 160)}${small.length>160?'…':''}</td>
+            <td>${reqn}</td>
+          </tr>`;
+        }).join('');
+        $('#tblSnaps').innerHTML = rows || `<tr><td colspan="4" class="hint">暂无快照：请确认已启用自动拉取，并等待数据任务完成。</td></tr>`;
+
+      } catch (e) {
+        showToast('加载失败', String(e));
+      }
+    }
+
+    $('#btnLoad').onclick = load;
+    $('#btnOpenWatch').onclick = () => location.hash = '#/watchlist';
+
+    if (defaultSymbol) await load();
+  }
+
+  async function renderSettings() {
+    render(`
+      <div class="grid">
+        <div class="card" style="grid-column: span 6;">
+          <h3>自动拉取配置（只读）</h3>
+          <div class="hint">这些参数由后端环境变量控制。要启用自动拉取：需要在 <span class="mono">backend.env</span> 设置 <span class="mono">LABELING_AUTO_FETCH_ENABLED=true</span> 并重启后端容器。</div>
+          <div style="height: 10px;"></div>
+          <div class="mono" id="cfgBox">加载中...</div>
+        </div>
+        <div class="card" style="grid-column: span 6;">
+          <h3>常用入口</h3>
+          <div class="row">
+            <a class="btn" href="/aistock/api/docs" target="_blank" rel="noreferrer">打开 Swagger</a>
+            <a class="btn ghost" href="/aistock/api/openapi.json" target="_blank" rel="noreferrer">查看 OpenAPI</a>
+          </div>
+          <div style="height: 10px;"></div>
+          <div class="hint">前端页面路径：<span class="mono">/aistock/</span>（本页就是）</div>
+        </div>
+      </div>
+    `);
+
+    try {
+      const cfg = await apiGet('/ui/labeling_settings');
+      $('#cfgBox').textContent = JSON.stringify(cfg, null, 2);
+    } catch (e) {
+      $('#cfgBox').textContent = String(e);
+    }
+  }
+
+  async function renderRoute() {
+    const r = route();
+    setActiveNav(r);
+    setTitle(r);
+
+    await refreshPill();
+
+    if (r === 'dashboard') return renderDashboard();
+    if (r === 'candidates') return renderCandidates();
+    if (r === 'watchlist') return renderWatchlist();
+    if (r === 'tasks') return renderTasks();
+    if (r === 'lab') return renderLab();
+    if (r === 'settings') return renderSettings();
+
+    location.hash = '#/dashboard';
+  }
+
+  window.addEventListener('hashchange', renderRoute);
+  btnRefresh.onclick = renderRoute;
+
+  renderRoute();
+})();
+</script>
+
+</body>
 </html>
