@@ -3,1215 +3,301 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AIStock 控制台</title>
+  <title>AIStock - 候选池编辑</title>
   <base href="/aistock/" />
   <style>
-    :root {
-      --bg: #0b1020;
-      --panel: #111a33;
-      --panel2: #0f1730;
-      --text: #e6e9f2;
-      --muted: #a9b2c8;
-      --line: rgba(255,255,255,0.08);
-      --accent: #78a9ff;
-      --good: #6ee7b7;
-      --warn: #fbbf24;
-      --bad: #fb7185;
-      --shadow: 0 10px 30px rgba(0,0,0,0.35);
-      --radius: 16px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    :root{
+      --bg:#0b1020;--panel:#111a33;--text:#e6e9f2;--muted:#a9b2c8;--line:rgba(255,255,255,0.08);
+      --accent:#78a9ff;--good:#6ee7b7;--warn:#fbbf24;--bad:#fb7185;--shadow:0 10px 30px rgba(0,0,0,0.35);
+      --radius:16px;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif;
     }
-
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font-family: var(--sans);
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0;font-family:var(--sans);
       background: radial-gradient(1200px 600px at 20% 10%, rgba(120,169,255,0.18), transparent 60%),
                   radial-gradient(900px 500px at 85% 20%, rgba(110,231,183,0.10), transparent 55%),
                   var(--bg);
-      color: var(--text);
+      color:var(--text);
     }
-
-    a { color: inherit; text-decoration: none; }
-
-    .app {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      height: 100%;
+    .wrap{max-width:1200px;margin:0 auto;padding:18px}
+    .head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:14px 14px;border-radius:18px;
+      background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);box-shadow:var(--shadow);
     }
-
-    .side {
-      border-right: 1px solid var(--line);
-      padding: 18px;
-      background: linear-gradient(180deg, rgba(17,26,51,0.95), rgba(15,23,48,0.75));
-      backdrop-filter: blur(10px);
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background:linear-gradient(135deg, rgba(120,169,255,0.9), rgba(110,231,183,0.85));
+      display:grid;place-items:center;color:#081024;font-weight:900;letter-spacing:-1px;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-      box-shadow: var(--shadow);
-      margin-bottom: 16px;
+    .title{display:grid;gap:2px}
+    .title h1{margin:0;font-size:15px;line-height:1.1}
+    .title p{margin:0;font-size:12px;color:var(--muted)}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:var(--muted);font-size:12px;
     }
-
-    .logo {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, rgba(120,169,255,0.9), rgba(110,231,183,0.85));
-      display: grid;
-      place-items: center;
-      color: #081024;
-      font-weight: 900;
-      letter-spacing: -1px;
+    .dot{width:8px;height:8px;border-radius:999px;background:var(--muted)}
+    .dot.good{background:var(--good)} .dot.bad{background:var(--bad)}
+    .card{
+      margin-top:14px;background:rgba(17,26,51,0.72);border:1px solid rgba(255,255,255,0.08);
+      border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;
     }
-
-    .brand h1 {
-      font-size: 15px;
-      margin: 0;
-      line-height: 1.1;
+    .card h2{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600}
+    .hint{color:var(--muted);font-size:12px;line-height:1.5}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+    .input,select{
+      border-radius:14px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18);
+      color:var(--text);padding:10px 12px;outline:none;font-family:var(--sans);width:100%;
     }
-    .brand p {
-      margin: 2px 0 0;
-      font-size: 12px;
-      color: var(--muted);
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th,td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,0.06);text-align:left;vertical-align:top}
+    th{color:var(--muted);font-weight:600}
+    .mono{font-family:var(--mono)}
+    .btn{
+      background:rgba(120,169,255,0.12);border:1px solid rgba(120,169,255,0.25);
+      color:var(--text);padding:10px 12px;border-radius:14px;cursor:pointer;font-weight:700;font-size:12px;
     }
-
-    .nav {
-      display: grid;
-      gap: 6px;
-      margin-top: 12px;
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .toast{
+      position:fixed;right:20px;bottom:20px;width:min(420px, calc(100vw - 40px));
+      background:rgba(17,26,51,0.95);border:1px solid rgba(255,255,255,0.10);
+      border-radius:16px;padding:12px 12px;box-shadow:var(--shadow);display:none;z-index:50;
     }
-
-    .nav a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid transparent;
-      color: var(--muted);
-    }
-
-    .nav a:hover {
-      background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.06);
-      color: var(--text);
-    }
-
-    .nav a.active {
-      background: rgba(120,169,255,0.14);
-      border-color: rgba(120,169,255,0.25);
-      color: var(--text);
-    }
-
-    .icon {
-      width: 18px;
-      height: 18px;
-      opacity: 0.95;
-      flex: 0 0 auto;
-    }
-
-    .main {
-      padding: 22px;
-      overflow: auto;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .title {
-      display: grid;
-      gap: 4px;
-    }
-
-    .title h2 {
-      margin: 0;
-      font-size: 18px;
-      letter-spacing: 0.2px;
-    }
-
-    .title .sub {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--muted);
-    }
-
-    .dot.good { background: var(--good); }
-    .dot.warn { background: var(--warn); }
-    .dot.bad { background: var(--bad); }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 14px;
-    }
-
-    .card {
-      background: rgba(17,26,51,0.72);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      overflow: hidden;
-    }
-
-    .card h3 {
-      margin: 0 0 10px;
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 600;
-      letter-spacing: 0.2px;
-    }
-
-    .kpi {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-    }
-
-    .kpi .big {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.4px;
-    }
-
-    .kpi .small {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .btn {
-      background: rgba(120,169,255,0.12);
-      border: 1px solid rgba(120,169,255,0.25);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 14px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 12px;
-    }
-
-    .btn:hover { filter: brightness(1.05); }
-
-    .btn.ghost {
-      background: rgba(255,255,255,0.03);
-      border-color: rgba(255,255,255,0.08);
-      color: var(--muted);
-    }
-
-    .btn.bad {
-      background: rgba(251,113,133,0.12);
-      border-color: rgba(251,113,133,0.25);
-    }
-
-    .input, textarea, select {
-      width: 100%;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.18);
-      color: var(--text);
-      padding: 10px 12px;
-      outline: none;
-      font-family: var(--sans);
-    }
-
-    textarea { min-height: 160px; resize: vertical; font-family: var(--mono); font-size: 12px; }
-
-    .hint { color: var(--muted); font-size: 12px; line-height: 1.5; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    th, td {
-      padding: 10px 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      text-align: left;
-      vertical-align: top;
-    }
-
-    th { color: var(--muted); font-weight: 600; }
-
-    .mono { font-family: var(--mono); }
-
-    .tag {
-      display: inline-flex;
-      gap: 6px;
-      align-items: center;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-      color: var(--muted);
-      font-size: 11px;
-      white-space: nowrap;
-    }
-
-    .split {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .toast {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      width: min(420px, calc(100vw - 40px));
-      background: rgba(17,26,51,0.95);
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 16px;
-      padding: 12px 12px;
-      box-shadow: var(--shadow);
-      display: none;
-      z-index: 50;
-    }
-
-    .toast.show { display: block; }
-    .toast .t { font-weight: 700; font-size: 12px; margin-bottom: 6px; }
-    .toast .m { color: var(--muted); font-size: 12px; white-space: pre-wrap; }
-
-    @media (max-width: 980px) {
-      .app { grid-template-columns: 1fr; }
-      .side { display: none; }
-      .split { grid-template-columns: 1fr; }
-      .grid { grid-template-columns: repeat(6, 1fr); }
-    }
+    .toast.show{display:block}
+    .toast .t{font-weight:800;font-size:12px;margin-bottom:6px}
+    .toast .m{color:var(--muted);font-size:12px;white-space:pre-wrap}
+    @media (max-width: 980px){ .row{align-items:stretch} }
   </style>
 </head>
 <body>
-  <div class="app">
-    <aside class="side">
-      <div class="brand">
-        <div class="logo">S³</div>
-        <div>
-          <h1>AIStock 控制台</h1>
-          <p>候选池 · 推荐 · 复盘</p>
-        </div>
+<div class="wrap">
+  <div class="head">
+    <div class="brand">
+      <div class="logo">S³</div>
+      <div class="title">
+        <h1>候选池编辑</h1>
+        <p>只做一件事：编辑 p_limit_up（保存后即从列表消失）</p>
       </div>
-
-      <div class="nav" id="nav">
-        <a href="#/dashboard" data-route="dashboard" class="active">
-          <svg class="icon" viewBox="0 0 24 24" fill="none">
-            <path d="M4 12.5V20h6v-5h4v5h6v-7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M3 11l9-8 9 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          总览
-        </a>
-
-        <a href="#/candidates" data-route="candidates">
-          <svg class="icon" viewBox="0 0 24 24" fill="none">
-            <path d="M8 6h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M8 12h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M8 18h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-          </svg>
-          候选池编辑
-        </a>
-
-        <a href="#/recommendations" data-route="recommendations">
-          <svg class="icon" viewBox="0 0 24 24" fill="none">
-            <path d="M4 19V5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M8 17V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M12 15V9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M16 13V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M20 11V13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          盘前推荐
-        </a>
-
-        <a href="#/watchlist" data-route="watchlist">
-          <svg class="icon" viewBox="0 0 24 24" fill="none">
-            <path d="M12 21s-7-4.4-7-11a7 7 0 0 1 14 0c0 6.6-7 11-7 11Z" stroke="currentColor" stroke-width="1.8"/>
-          </svg>
-          重点观察池
-        </a>
-
-        <a href="#/tasks" data-route="tasks">
-          <svg class="icon" viewBox="0 0 24 24" fill="none">
-            <path d="M8 7h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M8 12h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M8 17h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M3 7l1 1 2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M3 12l1 1 2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M3 17l1 1 2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          数据任务
-        </a>
-
-        <a href="#/lab" data-route="lab">
-          <svg class="icon" viewBox="0 0 24 24" fill="none">
-            <path d="M9 3v4L5 19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2L15 7V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M9 7h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M8 14h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          实验室
-        </a>
-
-        <a href="#/settings" data-route="settings">
-          <svg class="icon" viewBox="0 0 24 24" fill="none">
-            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M19.4 15a7.9 7.9 0 0 0 .1-2l2-1.6-2-3.4-2.4 1a7.9 7.9 0 0 0-1.7-1l-.3-2.6H9.9l-.3 2.6a7.9 7.9 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.9 7.9 0 0 0 .1 2l-2 1.6 2 3.4 2.4-1c.5.4 1.1.7 1.7 1l.3 2.6h4.2l.3-2.6c.6-.3 1.2-.6 1.7-1l2.4 1 2-3.4-2-1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          设置
-        </a>
-      </div>
-
-      <div style="height: 14px;"></div>
-      <div class="hint">
-        <div><span class="tag"><span class="dot good"></span> P0 闭环</span></div>
-        <div style="height: 6px;"></div>
-        <div>16:00 自动拉候选池 → 编辑 p_limit_up → commit → 产出盘前推荐。</div>
-      </div>
-    </aside>
-
-    <main class="main">
-      <div class="topbar">
-        <div class="title">
-          <h2 id="pageTitle">总览</h2>
-          <div class="sub" id="pageSub">系统状态与今日关键指标</div>
-        </div>
-
-        <div class="row">
-          <div class="pill" id="pill">
-            <span class="dot" id="pillDot"></span>
-            <span id="pillText">连接中…</span>
-          </div>
-          <button class="btn ghost" id="btnRefresh">刷新</button>
-        </div>
-      </div>
-
-      <div id="root"></div>
-    </main>
+    </div>
+    <div class="pill" id="pill">
+      <span class="dot" id="pillDot"></span>
+      <span id="pillText">连接中…</span>
+    </div>
   </div>
 
-  <div class="toast" id="toast">
-    <div class="t" id="toastTitle"></div>
-    <div class="m" id="toastMsg"></div>
+  <div class="card">
+    <h2>批次</h2>
+    <div class="row">
+      <div style="flex:1;min-width:260px">
+        <div class="hint">选择 batch（默认最新）</div>
+        <select class="input" id="selBatch"></select>
+      </div>
+      <button class="btn" id="btnCommit">提交 commit</button>
+    </div>
+    <div style="height:10px"></div>
+    <div class="hint">
+      说明：页面只展示 <span class="mono">PENDING_EDIT</span> 候选。<br/>
+      你填写并保存 <span class="mono">p_limit_up</span> 后，该条目将不再出现（已完成编辑）。
+    </div>
   </div>
 
-  <script>
-  (() => {
-    // === config ===
-    const API_BASE = '/aistock/api';
+  <div class="card">
+    <h2>待编辑候选列表</h2>
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>symbol</th>
+            <th>name</th>
+            <th>high_days</th>
+            <th>limit_up_type</th>
+            <th>turnover_rate</th>
+            <th>change_rate</th>
+            <th>p_limit_up</th>
+            <th>保存</th>
+          </tr>
+        </thead>
+        <tbody id="tblCandidates"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-    // === helpers ===
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+<div class="toast" id="toast">
+  <div class="t" id="toastTitle"></div>
+  <div class="m" id="toastMsg"></div>
+</div>
 
-    const root = $('#root');
-    const pageTitle = $('#pageTitle');
-    const pageSub = $('#pageSub');
-    const pillDot = $('#pillDot');
-    const pillText = $('#pillText');
-    const btnRefresh = $('#btnRefresh');
+<script>
+(() => {
+  const API_BASE = '/aistock/api';
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-    function escapeHtml(s) {
-      return String(s ?? '').replace(/[&<>"']/g, (m) => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-      }[m]));
+  const selBatch = $('#selBatch');
+  const tbl = $('#tblCandidates');
+  const pillDot = $('#pillDot');
+  const pillText = $('#pillText');
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (m) => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[m]));
+  }
+
+  function showToast(title, msg) {
+    $('#toastTitle').textContent = title;
+    $('#toastMsg').textContent = msg;
+    const t = $('#toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 4200);
+  }
+
+  function dotStatus(kind) {
+    pillDot.classList.remove('good','bad');
+    pillDot.classList.add(kind);
+  }
+
+  async function apiSend(method, path, body) {
+    const res = await fetch(API_BASE + path, {
+      method,
+      headers: {'Content-Type': 'application/json'},
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const txt = await res.text();
+    let json;
+    try { json = txt ? JSON.parse(txt) : null; } catch { json = null; }
+    if (!res.ok) {
+      const msg = (json && (json.detail || json.message)) ? (json.detail || json.message) : txt;
+      throw new Error(msg || `HTTP ${res.status}`);
+    }
+    return json;
+  }
+  const apiGet = (path) => apiSend('GET', path);
+  const apiPost = (path, body) => apiSend('POST', path, body);
+  const apiPatch = (path, body) => apiSend('PATCH', path, body);
+
+  async function refreshPill() {
+    try {
+      const s = await apiGet('/ui/health');
+      pillText.textContent = `后端在线 · ${escapeHtml(s.version || 'v')}`;
+      dotStatus('good');
+    } catch (e) {
+      pillText.textContent = '后端离线';
+      dotStatus('bad');
+    }
+  }
+
+  async function loadBatches() {
+    const batches = await apiGet('/pool/batches?limit=50');
+    const opts = (batches || []).map(b => {
+      const label = `${b.trading_day || ''} · ${b.batch_id} · ${b.status || ''}`;
+      return `<option value="${escapeHtml(b.batch_id)}">${escapeHtml(label)}</option>`;
+    }).join('');
+    selBatch.innerHTML = opts || `<option value="">暂无 batch</option>`;
+    if (!selBatch.value && selBatch.options.length > 0) selBatch.value = selBatch.options[0].value;
+  }
+
+  async function loadCandidates() {
+    const batchId = selBatch.value;
+    if (!batchId) {
+      tbl.innerHTML = `<tr><td colspan="8" class="hint">暂无 batch</td></tr>`;
+      return;
     }
 
-    function showToast(title, msg) {
-      $('#toastTitle').textContent = title;
-      $('#toastMsg').textContent = msg;
-      const t = $('#toast');
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 4200);
-    }
+    // 强制只看待编辑项（已编辑的不显示）
+    const cands = await apiGet(`/pool/batches/${encodeURIComponent(batchId)}/candidates?status=PENDING_EDIT&limit=5000`);
+    const rows = (cands || []).map(c => {
+      const raw = c.raw_json || {};
+      const highDays = raw.high_days ?? '';
+      const lut = raw.limit_up_type ?? '';
+      const tr = raw.turnover_rate ?? '';
+      const cr = raw.change_rate ?? '';
+      const pl = (c.p_limit_up === null || c.p_limit_up === undefined) ? '' : String(c.p_limit_up);
 
-    function fmtTs(s) {
-      if (!s) return '';
-      const d = new Date(s);
-      if (Number.isNaN(d.getTime())) return String(s);
-      return d.toISOString().slice(0,19).replace('T',' ');
-    }
+      return `<tr data-symbol="${escapeHtml(c.symbol)}">
+        <td class="mono">${escapeHtml(c.symbol)}</td>
+        <td>${escapeHtml(c.name || '')}</td>
+        <td>${escapeHtml(highDays)}</td>
+        <td>${escapeHtml(lut)}</td>
+        <td>${escapeHtml(tr)}</td>
+        <td>${escapeHtml(cr)}</td>
+        <td style="min-width:160px">
+          <input class="input mono" style="padding:8px 10px" data-pl value="${escapeHtml(pl)}" placeholder="0~1" />
+        </td>
+        <td style="min-width:100px">
+          <button class="btn" data-save>保存</button>
+        </td>
+      </tr>`;
+    }).join('');
 
-    function route() {
-      const h = location.hash || '#/dashboard';
-      const r = h.replace('#/','').split('?')[0];
-      return r || 'dashboard';
-    }
+    tbl.innerHTML = rows || `<tr><td colspan="8" class="hint">没有待编辑候选（可能都已填完 p_limit_up）</td></tr>`;
 
-    function setActiveNav(r) {
-      $$('#nav a').forEach(a => {
-        const ar = a.getAttribute('data-route');
-        a.classList.toggle('active', ar === r);
-      });
-    }
+    // bind save
+    $$('#tblCandidates [data-save]').forEach(btn => {
+      btn.onclick = async () => {
+        const tr = btn.closest('tr');
+        const symbol = tr.getAttribute('data-symbol');
+        const input = tr.querySelector('[data-pl]');
+        const v = (input.value || '').trim();
 
-    function setTitle(r) {
-      const map = {
-        dashboard: ['总览', '系统状态与今日关键指标'],
-        candidates: ['候选池编辑', '只显示待编辑项：填写 p_limit_up 后会从列表消失'],
-        recommendations: ['盘前推荐', 'TopN 推荐 + 理由 + 证据 + 置信度/风险提示'],
-        watchlist: ['重点观察池', '从候选/推理触发的观察清单'],
-        tasks: ['数据任务', '采集/特征/推理/回溯的执行记录'],
-        lab: ['实验室', '快速查询单票快照与模型输出'],
-        settings: ['设置', '过滤规则与系统开关（只读/管理员）'],
-      };
-      const [t, sub] = map[r] || ['AIStock 控制台', ''];
-      pageTitle.textContent = t;
-      pageSub.textContent = sub;
-    }
-
-    async function apiSend(method, path, body) {
-      const res = await fetch(API_BASE + path, {
-        method,
-        headers: {'Content-Type': 'application/json'},
-        body: body ? JSON.stringify(body) : undefined,
-      });
-      const txt = await res.text();
-      let json;
-      try { json = txt ? JSON.parse(txt) : null; } catch { json = null; }
-      if (!res.ok) {
-        const msg = (json && (json.detail || json.message)) ? (json.detail || json.message) : txt;
-        throw new Error(msg || `HTTP ${res.status}`);
-      }
-      return json;
-    }
-
-    const apiGet = (path) => apiSend('GET', path);
-    const apiPost = (path, body) => apiSend('POST', path, body);
-    const apiPut = (path, body) => apiSend('PUT', path, body);
-    const apiPatch = (path, body) => apiSend('PATCH', path, body);
-
-    function render(html) {
-      root.innerHTML = html;
-    }
-
-    function dotStatus(kind) {
-      pillDot.classList.remove('good','warn','bad');
-      pillDot.classList.add(kind);
-    }
-
-    async function refreshPill() {
-      try {
-        const s = await apiGet('/ui/health');
-        pillText.textContent = `后端在线 · ${escapeHtml(s.version || 'v')}`;
-        dotStatus('good');
-      } catch (e) {
-        pillText.textContent = '后端离线';
-        dotStatus('bad');
-      }
-    }
-
-    function parseQuery() {
-      const h = location.hash || '';
-      const q = h.split('?')[1] || '';
-      const p = new URLSearchParams(q);
-      const obj = {};
-      p.forEach((v,k) => obj[k]=v);
-      return obj;
-    }
-
-    // === pages ===
-    async function renderDashboard() {
-      render(`
-        <div class="grid">
-          <div class="card" style="grid-column: span 4;">
-            <h3>今日批次</h3>
-            <div class="kpi">
-              <div class="big" id="kpiBatches">-</div>
-              <div class="small">个</div>
-            </div>
-            <div class="hint" id="kpiBatchesHint">加载中...</div>
-          </div>
-
-          <div class="card" style="grid-column: span 4;">
-            <h3>待编辑候选</h3>
-            <div class="kpi">
-              <div class="big" id="kpiPending">-</div>
-              <div class="small">只</div>
-            </div>
-            <div class="hint" id="kpiPendingHint">加载中...</div>
-          </div>
-
-          <div class="card" style="grid-column: span 4;">
-            <h3>盘前推荐</h3>
-            <div class="kpi">
-              <div class="big" id="kpiReco">-</div>
-              <div class="small">条</div>
-            </div>
-            <div class="hint" id="kpiRecoHint">加载中...</div>
-          </div>
-
-          <div class="card" style="grid-column: span 12;">
-            <h3>今日最新批次（最近 10 条）</h3>
-            <div style="overflow:auto;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>trading_day</th>
-                    <th>batch_id</th>
-                    <th>status</th>
-                    <th>fetch_ts</th>
-                    <th>filter_rules</th>
-                    <th>raw_hash</th>
-                  </tr>
-                </thead>
-                <tbody id="tblBatches"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `);
-
-      try {
-        const batches = await apiGet('/pool/batches?limit=10');
-        $('#kpiBatches').textContent = Array.isArray(batches) ? batches.length : 0;
-        $('#kpiBatchesHint').textContent = '用于审计：记录当时过滤规则快照';
-
-        const latest = (batches && batches[0]) ? batches[0] : null;
-        let pendingCount = 0;
-        if (latest) {
-          const cands = await apiGet(`/pool/batches/${encodeURIComponent(latest.batch_id)}/candidates?status=PENDING_EDIT&limit=10000`);
-          pendingCount = Array.isArray(cands) ? cands.length : 0;
+        if (v === '') {
+          showToast('未填写', 'p_limit_up 必须填写后再保存（保存代表完成编辑）。');
+          return;
         }
-        $('#kpiPending').textContent = pendingCount;
-        $('#kpiPendingHint').textContent = latest ? `最新 batch: ${latest.batch_id}` : '暂无 batch';
-
-        const recos = await apiGet('/recommendations?day=today&limit=1000');
-        $('#kpiReco').textContent = Array.isArray(recos?.items) ? recos.items.length : 0;
-        $('#kpiRecoHint').textContent = recos?.trading_day ? `trading_day=${recos.trading_day}` : '暂无推荐';
-
-        const rows = (batches || []).map(b => {
-          const fr = escapeHtml(JSON.stringify(b.filter_rules || {}));
-          return `<tr>
-            <td class="mono">${escapeHtml(b.trading_day || '')}</td>
-            <td class="mono"><a href="#/candidates?batch=${encodeURIComponent(b.batch_id)}">${escapeHtml(b.batch_id)}</a></td>
-            <td>${escapeHtml(b.status || '')}</td>
-            <td class="mono">${escapeHtml(fmtTs(b.fetch_ts || ''))}</td>
-            <td class="mono">${fr.length > 70 ? fr.slice(0,70) + '…' : fr}</td>
-            <td class="mono">${escapeHtml(b.raw_hash || '')}</td>
-          </tr>`;
-        }).join('');
-        $('#tblBatches').innerHTML = rows || `<tr><td colspan="6" class="hint">暂无数据</td></tr>`;
-      } catch (e) {
-        showToast('加载失败', String(e));
-      }
-    }
-
-    async function renderCandidates() {
-      const q = parseQuery();
-      render(`
-        <div class="grid">
-          <div class="card" style="grid-column: span 12;">
-            <h3>批次选择</h3>
-            <div class="row">
-              <div style="min-width: 240px; flex: 1;">
-                <div class="hint">batch_id（默认最新）</div>
-                <select class="input" id="selBatch"></select>
-              </div>
-              <div style="min-width: 240px; flex: 1;">
-                <div class="hint">展示范围</div>
-                <select class="input" id="selStatus">
-                  <option value="PENDING_EDIT">待编辑（默认）</option>
-                  <option value="READY">已编辑</option>
-                  <option value="ALL">全部</option>
-                </select>
-              </div>
-              <div class="row" style="align-items:flex-end;">
-                <button class="btn ghost" id="btnReload">刷新</button>
-                <button class="btn" id="btnCommit">提交 commit</button>
-              </div>
-            </div>
-            <div style="height: 10px;"></div>
-            <div class="hint" id="candHint">说明：这里只用于填写 <span class="mono">p_limit_up</span>，保存后该行会从“待编辑”列表消失。</div>
-          </div>
-
-          <div class="card" style="grid-column: span 12;">
-            <h3>候选列表</h3>
-            <div style="overflow:auto;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>symbol</th>
-                    <th>name</th>
-                    <th>high_days</th>
-                    <th>limit_up_type</th>
-                    <th>turnover_rate</th>
-                    <th>change_rate</th>
-                    <th>p_limit_up</th>
-                    <th>保存</th>
-                  </tr>
-                </thead>
-                <tbody id="tblCandidates"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `);
-
-      const selBatch = $('#selBatch');
-      const selStatus = $('#selStatus');
-      if (q.batch) selBatch.dataset.pref = q.batch;
-
-      async function loadBatches() {
-        const batches = await apiGet('/pool/batches?limit=50');
-        const opts = (batches || []).map(b => {
-          const label = `${b.trading_day || ''} · ${b.batch_id} · ${b.status || ''}`;
-          return `<option value="${escapeHtml(b.batch_id)}">${escapeHtml(label)}</option>`;
-        }).join('');
-        selBatch.innerHTML = opts || `<option value="">暂无</option>`;
-
-        const pref = selBatch.dataset.pref;
-        if (pref) {
-          const o = Array.from(selBatch.options).find(x => x.value === pref);
-          if (o) selBatch.value = pref;
-        }
-        if (!selBatch.value && selBatch.options.length > 0) selBatch.value = selBatch.options[0].value;
-      }
-
-      function getStatusParam() {
-        const v = selStatus.value;
-        if (v === 'ALL') return '';
-        return v;
-      }
-
-      async function loadCandidates() {
-        const batchId = selBatch.value;
-        if (!batchId) {
-          $('#tblCandidates').innerHTML = `<tr><td colspan="8" class="hint">暂无 batch</td></tr>`;
+        const n = Number(v);
+        if (!Number.isFinite(n) || n < 0 || n > 1) {
+          showToast('格式错误', 'p_limit_up 必须是 0~1 的小数');
           return;
         }
 
-        const st = getStatusParam();
-        const url = st
-          ? `/pool/batches/${encodeURIComponent(batchId)}/candidates?status=${encodeURIComponent(st)}&limit=5000`
-          : `/pool/batches/${encodeURIComponent(batchId)}/candidates?limit=5000`;
-
-        const cands = await apiGet(url);
-        const rows = (cands || []).map(c => {
-          const raw = c.raw_json || {};
-          const highDays = raw.high_days ?? '';
-          const lut = raw.limit_up_type ?? '';
-          const tr = raw.turnover_rate ?? '';
-          const cr = raw.change_rate ?? '';
-          const pl = (c.p_limit_up === null || c.p_limit_up === undefined) ? '' : String(c.p_limit_up);
-          return `<tr data-symbol="${escapeHtml(c.symbol)}">
-            <td class="mono">${escapeHtml(c.symbol)}</td>
-            <td>${escapeHtml(c.name || '')}</td>
-            <td>${escapeHtml(highDays)}</td>
-            <td>${escapeHtml(lut)}</td>
-            <td>${escapeHtml(tr)}</td>
-            <td>${escapeHtml(cr)}</td>
-            <td style="min-width: 160px;">
-              <input class="input mono" style="padding: 8px 10px;" data-pl value="${escapeHtml(pl)}" placeholder="0~1 (可空)" />
-            </td>
-            <td style="min-width: 100px;">
-              <button class="btn" data-save>保存</button>
-            </td>
-          </tr>`;
-        }).join('');
-
-        $('#tblCandidates').innerHTML = rows || `<tr><td colspan="8" class="hint">没有符合条件的候选（可能都已编辑）</td></tr>`;
-
-        // bind save buttons
-        $$('#tblCandidates [data-save]').forEach(btn => {
-          btn.onclick = async () => {
-            const tr = btn.closest('tr');
-            const symbol = tr.getAttribute('data-symbol');
-            const input = tr.querySelector('[data-pl]');
-            const v = (input.value || '').trim();
-            if (v === '') {
-              showToast('未填写', 'p_limit_up 允许为空，但“保存”意味着你完成编辑；建议填写后再保存。');
-              return;
-            }
-            const n = Number(v);
-            if (!Number.isFinite(n) || n < 0 || n > 1) {
-              showToast('格式错误', 'p_limit_up 必须是 0~1 的小数');
-              return;
-            }
-            try {
-              btn.disabled = true;
-              await apiPatch(`/pool/batches/${encodeURIComponent(batchId)}/candidates/${encodeURIComponent(symbol)}`, { p_limit_up: n });
-              showToast('已保存', `${symbol} p_limit_up=${n}`);
-              await loadCandidates(); // saved item disappears in PENDING_EDIT view
-            } catch (e) {
-              showToast('保存失败', String(e));
-            } finally {
-              btn.disabled = false;
-            }
-          };
-        });
-      }
-
-      $('#btnReload').onclick = async () => {
         try {
-          await loadBatches();
-          await loadCandidates();
-        } catch (e) {
-          showToast('刷新失败', String(e));
-        }
-      };
-
-      selBatch.onchange = loadCandidates;
-      selStatus.onchange = loadCandidates;
-
-      $('#btnCommit').onclick = async () => {
-        const batchId = selBatch.value;
-        if (!batchId) return;
-        try {
-          await apiPost(`/pool/batches/${encodeURIComponent(batchId)}/commit`, {});
-          showToast('已提交', `batch=${batchId} 已 COMMITTED，推荐已生成`);
-          location.hash = '#/recommendations';
-        } catch (e) {
-          showToast('提交失败', String(e));
-        }
-      };
-
-      try {
-        await loadBatches();
-        if (q.status) selStatus.value = q.status;
-        if (q.batch) selBatch.value = q.batch;
-        await loadCandidates();
-      } catch (e) {
-        showToast('加载失败', String(e));
-      }
-    }
-
-    function badgeAction(a) {
-      const t = String(a || '').toUpperCase();
-      if (t === 'BUY') return `<span class="tag"><span class="dot good"></span> BUY</span>`;
-      if (t === 'AVOID') return `<span class="tag"><span class="dot bad"></span> AVOID</span>`;
-      return `<span class="tag"><span class="dot warn"></span> WATCH</span>`;
-    }
-
-    async function renderRecommendations() {
-      render(`
-        <div class="grid">
-          <div class="card" style="grid-column: span 12;">
-            <h3>盘前推荐</h3>
-            <div class="row">
-              <input class="input mono" id="inDay" style="max-width: 220px;" placeholder="YYYY-MM-DD 或 today" value="today" />
-              <button class="btn" id="btnLoadReco">加载</button>
-            </div>
-            <div style="height: 10px;"></div>
-            <div class="hint">输出：TopN 推荐 + 理由 + 证据引用（batch/raw_hash）+ 置信度/风险提示。</div>
-          </div>
-
-          <div class="card" style="grid-column: span 12;">
-            <h3>推荐列表</h3>
-            <div style="overflow:auto;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>action</th>
-                    <th>symbol</th>
-                    <th>score</th>
-                    <th>confidence</th>
-                    <th>reasons</th>
-                    <th>evidence_refs</th>
-                  </tr>
-                </thead>
-                <tbody id="tblReco"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `);
-
-      async function load() {
-        const day = ($('#inDay').value || 'today').trim() || 'today';
-        try {
-          const res = await apiGet(`/recommendations?day=${encodeURIComponent(day)}&limit=200`);
-          const items = res?.items || [];
-          const rows = items.map(it => {
-            const reasons = (it.reasons || []).map(r => `${r.reason_code||''}:${r.reason_text||''}`).join(' | ');
-            const refs = (it.evidence_refs || []).join(', ');
-            return `<tr>
-              <td>${badgeAction(it.action)}</td>
-              <td class="mono">${escapeHtml(it.symbol)}</td>
-              <td class="mono">${escapeHtml(it.score)}</td>
-              <td class="mono">${escapeHtml(it.confidence)}</td>
-              <td>${escapeHtml(reasons).slice(0, 240)}${reasons.length>240?'…':''}</td>
-              <td class="mono">${escapeHtml(refs).slice(0, 240)}${refs.length>240?'…':''}</td>
-            </tr>`;
-          }).join('');
-          $('#tblReco').innerHTML = rows || `<tr><td colspan="6" class="hint">暂无推荐（请先 commit 批次）</td></tr>`;
-        } catch (e) {
-          showToast('加载失败', String(e));
-        }
-      }
-
-      $('#btnLoadReco').onclick = load;
-      await load();
-    }
-
-    async function renderWatchlist() {
-      render(`
-        <div class="grid">
-          <div class="card" style="grid-column: span 12;">
-            <h3>重点观察池</h3>
-            <div class="hint">用于记录推理链路中的重点标的（可做后续追踪/复盘）。</div>
-            <div style="height: 10px;"></div>
-            <div style="overflow:auto;">
-              <table>
-                <thead><tr><th>symbol</th><th>hit_count</th><th>active</th><th>updated_ts</th></tr></thead>
-                <tbody id="tblWl"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `);
-
-      try {
-        const wl = await apiGet('/ui/watchlist?limit=500');
-        const rows = (wl || []).map(x => `<tr>
-          <td class="mono">${escapeHtml(x.symbol)}</td>
-          <td class="mono">${escapeHtml(x.hit_count)}</td>
-          <td>${x.active ? '是' : '否'}</td>
-          <td class="mono">${escapeHtml(fmtTs(x.updated_ts))}</td>
-        </tr>`).join('');
-        $('#tblWl').innerHTML = rows || `<tr><td colspan="4" class="hint">暂无</td></tr>`;
-      } catch (e) {
-        showToast('加载失败', String(e));
-      }
-    }
-
-    async function renderTasks() {
-      render(`
-        <div class="grid">
-          <div class="card" style="grid-column: span 12;">
-            <h3>数据任务</h3>
-            <div class="row">
-              <button class="btn ghost" id="btnReload">刷新</button>
-            </div>
-            <div style="height: 10px;"></div>
-            <div style="overflow:auto;">
-              <table>
-                <thead><tr>
-                  <th>step</th><th>batch_id</th><th>status</th><th>started</th><th>ended</th><th>message</th>
-                </tr></thead>
-                <tbody id="tblTasks"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `);
-
-      async function load() {
-        try {
-          const rows = await apiGet('/ui/pipeline_steps?limit=200');
-          const html = (rows || []).map(r => `<tr>
-            <td class="mono">${escapeHtml(r.step_name)}</td>
-            <td class="mono">${escapeHtml(r.batch_id)}</td>
-            <td>${escapeHtml(r.status)}</td>
-            <td class="mono">${escapeHtml(fmtTs(r.started_ts))}</td>
-            <td class="mono">${escapeHtml(fmtTs(r.ended_ts))}</td>
-            <td>${escapeHtml(r.message || '').slice(0, 160)}${(r.message||'').length>160?'…':''}</td>
-          </tr>`).join('');
-          $('#tblTasks').innerHTML = html || `<tr><td colspan="6" class="hint">暂无</td></tr>`;
-        } catch (e) {
-          showToast('加载失败', String(e));
-        }
-      }
-
-      $('#btnReload').onclick = load;
-      await load();
-    }
-
-    async function renderLab() {
-      const q = parseQuery();
-      const defaultSymbol = q.symbol || '';
-      render(`
-        <div class="card">
-          <h3>单票快照查询</h3>
-          <div class="hint">输入 symbol，查看最新特征快照/决策输出（用于排障与实验）。</div>
-          <div style="height: 10px;"></div>
-          <div class="row">
-            <input class="input" id="inSymbol" style="max-width: 320px;" placeholder="股票代码" value="${escapeHtml(defaultSymbol)}" />
-            <button class="btn" id="btnLoad">加载快照</button>
-            <button class="btn ghost" id="btnOpenWatch">打开观察池</button>
-          </div>
-          <div style="height: 10px;"></div>
-          <div id="labHead" class="hint"></div>
-          <div style="height: 10px;"></div>
-          <div style="overflow:auto;">
-            <table>
-              <thead><tr>
-                <th>时间</th><th>特征集</th><th>摘要</th><th>请求数</th>
-              </tr></thead>
-              <tbody id="tblSnaps"></tbody>
-            </table>
-          </div>
-        </div>
-      `);
-
-      async function load() {
-        const sym = ($('#inSymbol').value || '').trim();
-        if (!sym) { showToast('请输入股票代码', '例如：000001.SZ'); return; }
-        try {
-          const [snaps, wl] = await Promise.all([
-            apiGet(`/ui/symbol/${encodeURIComponent(sym)}/snapshots?limit=80`),
-            apiGet('/ui/watchlist?limit=500')
-          ]);
-          const w = (wl || []).find(x => x.symbol === sym);
-          $('#labHead').innerHTML = w
-            ? `观察池：<span class="mono">${escapeHtml(sym)}</span> · 触发次数：<b>${escapeHtml(w.hit_count)}</b> · 状态：${w.active ? '活跃' : '暂停'}`
-            : `观察池：<span class="mono">${escapeHtml(sym)}</span> · 尚未进入`;
-
-          const rows = (snaps || []).map(s => {
-            const asof = (s.asof_ts||'').slice(0,19).replace('T',' ');
-            const f = s.features || {};
-            const summary = f.summary || f.rt || f.hist || f.hf || f;
-            const small = escapeHtml(typeof summary === 'string' ? summary : JSON.stringify(summary));
-            const reqn = Array.isArray(s.request_ids) ? s.request_ids.length : 0;
-            return `<tr>
-              <td class="mono">${escapeHtml(asof)}</td>
-              <td class="mono">${escapeHtml(s.feature_set)}</td>
-              <td class="mono">${small.slice(0, 160)}${small.length>160?'…':''}</td>
-              <td>${reqn}</td>
-            </tr>`;
-          }).join('');
-          $('#tblSnaps').innerHTML = rows || `<tr><td colspan="4" class="hint">暂无快照：请确认已产生数据。</td></tr>`;
-        } catch (e) {
-          showToast('加载失败', String(e));
-        }
-      }
-
-      $('#btnLoad').onclick = load;
-      $('#btnOpenWatch').onclick = () => location.hash = '#/watchlist';
-
-      if (defaultSymbol) await load();
-    }
-
-    async function renderSettings() {
-      render(`
-        <div class="grid">
-          <div class="card" style="grid-column: span 6;">
-            <h3>候选池过滤规则（生效视图）</h3>
-            <div class="hint">这是系统当前真正使用的规则（包含来源 ENV/DB/VERSIONED 与有效版本信息）。</div>
-            <div style="height: 10px;"></div>
-            <div class="row">
-              <button class="btn ghost" id="btnRulesReload">刷新</button>
-            </div>
-            <div style="height: 10px;"></div>
-            <pre class="mono" id="rulesBox" style="margin:0; white-space: pre-wrap;">加载中...</pre>
-          </div>
-
-          <div class="card" style="grid-column: span 6;">
-            <h3>更新 DB 规则（方案2）</h3>
-            <div class="hint">仅当 <span class="mono">POOL_RULES_SOURCE=DB</span> 或 <span class="mono">VERSIONED</span>（fallback）时生效。</div>
-            <div style="height: 10px;"></div>
-            <div class="row">
-              <div style="flex:1; min-width: 220px;">
-                <div class="hint">allowed_prefixes（逗号分隔）</div>
-                <input class="input mono" id="inPrefixes" placeholder="0 或 0,6" />
-              </div>
-              <div style="flex:1; min-width: 220px;">
-                <div class="hint">allowed_exchanges（逗号分隔）</div>
-                <input class="input mono" id="inExchanges" placeholder="SZ 或 SZ,SH" />
-              </div>
-            </div>
-            <div style="height: 10px;"></div>
-            <div class="row">
-              <button class="btn" id="btnSaveDbRules">保存到 DB</button>
-              <div class="hint" id="saveDbMsg"></div>
-            </div>
-          </div>
-
-          <div class="card" style="grid-column: span 8;">
-            <h3>规则版本（方案3 · VERSIONED）</h3>
-            <div class="hint">每次修改生成新版本，带 <span class="mono">effective_ts</span>，便于复盘追溯。</div>
-            <div style="height: 10px;"></div>
-            <div class="row" style="align-items:flex-end;">
-              <div style="flex:1; min-width: 180px;">
-                <div class="hint">prefixes</div>
-                <input class="input mono" id="rsPrefixes" placeholder="0,6" />
-              </div>
-              <div style="flex:1; min-width: 180px;">
-                <div class="hint">exchanges</div>
-                <input class="input mono" id="rsExchanges" placeholder="SZ,SH" />
-              </div>
-              <div style="flex:1; min-width: 240px;">
-                <div class="hint">effective_ts（可空，默认现在）</div>
-                <input class="input mono" id="rsEff" placeholder="2026-01-15 16:00:00" />
-              </div>
-            </div>
-            <div style="height: 10px;"></div>
-            <div class="row">
-              <div style="flex:1;">
-                <div class="hint">note（可空）</div>
-                <input class="input" id="rsNote" placeholder="例如：扩到沪市" />
-              </div>
-              <button class="btn" id="btnCreateRuleset">创建版本</button>
-              <button class="btn ghost" id="btnListRulesets">刷新列表</button>
-            </div>
-            <div style="height: 10px;"></div>
-            <div style="overflow:auto; max-height: 320px;">
-              <table>
-                <thead><tr>
-                  <th>ID</th><th>prefixes</th><th>exchanges</th><th>effective_ts</th><th>note</th>
-                </tr></thead>
-                <tbody id="tblRulesets"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="card" style="grid-column: span 4;">
-            <h3>常用入口</h3>
-            <div class="row">
-              <a class="btn" href="/aistock/api/docs" target="_blank" rel="noreferrer">打开 Swagger</a>
-              <a class="btn ghost" href="/aistock/api/openapi.json" target="_blank" rel="noreferrer">查看 OpenAPI</a>
-            </div>
-            <div style="height: 10px;"></div>
-            <div class="hint">前端页面路径：<span class="mono">/aistock/</span></div>
-            <div style="height: 10px;"></div>
-            <div class="hint">提示：切换规则来源需要改后端环境变量 <span class="mono">POOL_RULES_SOURCE</span> 并重启服务。</div>
-          </div>
-
-          <div class="card" style="grid-column: span 12;">
-            <h3>后端配置（只读）</h3>
-            <div class="hint">这是后端暴露的配置/开关快照（用于排障）。</div>
-            <div style="height: 10px;"></div>
-            <pre class="mono" id="cfgBox" style="margin:0; white-space: pre-wrap;">加载中...</pre>
-          </div>
-        </div>
-      `);
-
-      async function loadRules() {
-        try {
-          const r = await apiGet('/admin/pool_rules');
-          $('#rulesBox').textContent = JSON.stringify(r, null, 2);
-        } catch (e) {
-          $('#rulesBox').textContent = String(e);
-        }
-      }
-
-      async function loadRulesets() {
-        try {
-          const rows = await apiGet('/admin/pool_rulesets?limit=50');
-          const html = (rows || []).map(r => `<tr>
-            <td class="mono">${escapeHtml(r.rule_set_id)}</td>
-            <td class="mono">${escapeHtml((r.allowed_prefixes||[]).join(','))}</td>
-            <td class="mono">${escapeHtml((r.allowed_exchanges||[]).join(','))}</td>
-            <td class="mono">${escapeHtml(String(r.effective_ts||'').slice(0,19).replace('T',' '))}</td>
-            <td>${escapeHtml(r.note || '')}</td>
-          </tr>`).join('');
-          $('#tblRulesets').innerHTML = html || `<tr><td colspan="5" class="hint">暂无</td></tr>`;
-        } catch (e) {
-          showToast('加载规则版本失败', String(e));
-        }
-      }
-
-      $('#btnRulesReload').onclick = loadRules;
-
-      $('#btnSaveDbRules').onclick = async () => {
-        const prefixes = ($('#inPrefixes').value || '').trim();
-        const exchanges = ($('#inExchanges').value || '').trim();
-        if (!prefixes && !exchanges) {
-          showToast('参数不足', '至少填写 prefixes 或 exchanges');
-          return;
-        }
-        try {
-          const res = await apiPut('/admin/pool_rules', { allowed_prefixes: prefixes, allowed_exchanges: exchanges });
-          $('#saveDbMsg').textContent = '已保存：' + JSON.stringify(res.saved || {}, null, 0);
-          showToast('保存成功', 'DB 规则已更新（是否生效取决于 POOL_RULES_SOURCE）');
-          await loadRules();
+          btn.disabled = true;
+          await apiPatch(`/pool/batches/${encodeURIComponent(batchId)}/candidates/${encodeURIComponent(symbol)}`, { p_limit_up: n });
+          showToast('已保存', `${symbol} p_limit_up=${n}`);
+          await loadCandidates(); // 重新加载 -> 该条会消失
         } catch (e) {
           showToast('保存失败', String(e));
+        } finally {
+          btn.disabled = false;
         }
       };
+    });
+  }
 
-      $('#btnCreateRuleset').onclick = async () => {
-        const prefixes = ($('#rsPrefixes').value || '').trim();
-        const exchanges = ($('#rsExchanges').value || '').trim();
-        const effective_ts = ($('#rsEff').value || '').trim();
-        const note = ($('#rsNote').value || '').trim();
-        if (!prefixes || !exchanges) {
-          showToast('参数不足', 'prefixes 与 exchanges 都需要');
-          return;
-        }
-        try {
-          const payload = { allowed_prefixes: prefixes, allowed_exchanges: exchanges, note };
-          if (effective_ts) payload.effective_ts = effective_ts;
-          const res = await apiPost('/admin/pool_rulesets', payload);
-          showToast('创建成功', `rule_set_id=${res.rule_set_id}`);
-          await loadRulesets();
-          await loadRules();
-        } catch (e) {
-          showToast('创建失败', String(e));
-        }
-      };
+  async function init() {
+    await refreshPill();
+    await loadBatches();
+    await loadCandidates();
 
-      $('#btnListRulesets').onclick = loadRulesets;
+    // batch 切换自动刷新列表
+    selBatch.onchange = loadCandidates;
 
+    // commit
+    $('#btnCommit').onclick = async () => {
+      const batchId = selBatch.value;
+      if (!batchId) return;
       try {
-        const cfg = await apiGet('/ui/labeling_settings');
-        $('#cfgBox').textContent = JSON.stringify(cfg, null, 2);
+        const btn = $('#btnCommit');
+        btn.disabled = true;
+        await apiPost(`/pool/batches/${encodeURIComponent(batchId)}/commit`, {});
+        showToast('已提交', `batch=${batchId} 已 COMMITTED`);
       } catch (e) {
-        $('#cfgBox').textContent = String(e);
+        showToast('提交失败', String(e));
+      } finally {
+        $('#btnCommit').disabled = false;
       }
+    };
 
-      await loadRules();
-      await loadRulesets();
-    }
+    // 只做“自动”刷新后端连通性提示，不提供任何手动刷新按钮
+    setInterval(refreshPill, 15000);
+  }
 
-    async function renderRoute() {
-      const r = route();
-      setActiveNav(r);
-      setTitle(r);
-
-      await refreshPill();
-
-      if (r === 'dashboard') return renderDashboard();
-      if (r === 'candidates') return renderCandidates();
-      if (r === 'recommendations') return renderRecommendations();
-      if (r === 'watchlist') return renderWatchlist();
-      if (r === 'tasks') return renderTasks();
-      if (r === 'lab') return renderLab();
-      if (r === 'settings') return renderSettings();
-
-      location.hash = '#/dashboard';
-    }
-
-    window.addEventListener('hashchange', renderRoute);
-    btnRefresh.onclick = renderRoute;
-
-    renderRoute();
-  })();
-  </script>
+  init().catch(e => showToast('初始化失败', String(e)));
+})();
+</script>
 </body>
 </html>
