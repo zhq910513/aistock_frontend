@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AIStock - 候选池编辑</title>
+  <title>AIStock</title>
   <base href="/aistock/" />
   <style>
     :root{
@@ -21,6 +21,7 @@
       color:var(--text);
     }
     .wrap{max-width:1200px;margin:0 auto;padding:18px}
+
     .head{
       display:flex;align-items:center;justify-content:space-between;gap:12px;
       padding:14px 14px;border-radius:18px;
@@ -41,6 +42,36 @@
     }
     .dot{width:8px;height:8px;border-radius:999px;background:var(--muted)}
     .dot.good{background:var(--good)} .dot.bad{background:var(--bad)}
+
+    .nav{
+      display:flex;gap:10px;flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .nav a{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.02);
+      color:var(--muted);
+      text-decoration:none;
+      font-size:12px;
+      font-weight:700;
+      user-select:none;
+    }
+    .nav a.active{
+      color:var(--text);
+      border-color:rgba(120,169,255,0.30);
+      background:rgba(120,169,255,0.12);
+    }
+    .nav .tag{
+      font-size:11px;
+      color:var(--muted);
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.12);
+    }
+
     .card{
       margin-top:14px;background:rgba(17,26,51,0.72);border:1px solid rgba(255,255,255,0.08);
       border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;
@@ -61,6 +92,46 @@
       color:var(--text);padding:10px 12px;border-radius:14px;cursor:pointer;font-weight:700;font-size:12px;
     }
     .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .view{display:none}
+    .view.active{display:block}
+
+    details{
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.12);
+      border-radius:14px;
+      padding:8px 10px;
+    }
+    details summary{
+      cursor:pointer;
+      color:var(--text);
+      font-weight:800;
+      font-size:12px;
+      list-style:none;
+    }
+    details summary::-webkit-details-marker{display:none}
+    .pre{
+      margin:8px 0 0;
+      white-space:pre-wrap;
+      word-break:break-word;
+      color:var(--muted);
+      font-size:12px;
+      font-family:var(--mono);
+      line-height:1.45;
+    }
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.02);
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+    }
+    .badge.good{color:var(--good);border-color:rgba(110,231,183,0.25);background:rgba(110,231,183,0.06)}
+    .badge.warn{color:var(--warn);border-color:rgba(251,191,36,0.25);background:rgba(251,191,36,0.06)}
+    .badge.bad{color:var(--bad);border-color:rgba(251,113,133,0.25);background:rgba(251,113,133,0.06)}
+
     .toast{
       position:fixed;right:20px;bottom:20px;width:min(420px, calc(100vw - 40px));
       background:rgba(17,26,51,0.95);border:1px solid rgba(255,255,255,0.10);
@@ -78,8 +149,8 @@
     <div class="brand">
       <div class="logo">S³</div>
       <div class="title">
-        <h1>候选池</h1>
-        <p>只做一件事：编辑 p_limit_up（保存后即从列表消失）</p>
+        <h1 id="pageTitle">候选池</h1>
+        <p id="pageSubTitle">只做一件事：编辑 p_limit_up（保存后即从列表消失）</p>
       </div>
     </div>
     <div class="pill" id="pill">
@@ -88,40 +159,100 @@
     </div>
   </div>
 
-  <div class="card">
-    <h2>批次</h2>
-    <div class="row">
-      <div style="flex:1;min-width:260px">
-        <div class="hint">选择 数据批次（默认最新）</div>
-        <select class="input" id="selBatch"></select>
+  <!-- 导航栏 -->
+  <div class="nav" id="nav">
+    <a href="#/pool" data-route="pool"><span>候选池编辑</span><span class="tag">T日16:00后</span></a>
+    <a href="#/reco" data-route="reco"><span>模型推荐</span><span class="tag">默认最新一批</span></a>
+  </div>
+
+  <!-- 视图：候选池编辑 -->
+  <div class="view" id="viewPool">
+    <div class="card">
+      <h2>批次</h2>
+      <div class="row">
+        <div style="flex:1;min-width:260px">
+          <div class="hint">选择 数据批次（默认最新）</div>
+          <select class="input" id="selBatch"></select>
+        </div>
+        <button class="btn" id="btnCommit">提交 commit</button>
       </div>
-      <button class="btn" id="btnCommit">提交 commit</button>
+      <div style="height:10px"></div>
+      <div class="hint">
+        说明：页面只展示 <span class="mono">PENDING_EDIT</span> 候选。<br/>
+        你填写并保存 <span class="mono">p_limit_up</span> 后，该条目将不再出现（已完成编辑）。
+      </div>
     </div>
-    <div style="height:10px"></div>
-    <div class="hint">
-      说明：页面只展示 <span class="mono">PENDING_EDIT</span> 候选。<br/>
-      你填写并保存 <span class="mono">p_limit_up</span> 后，该条目将不再出现（已完成编辑）。
+
+    <div class="card">
+      <h2>待编辑候选列表</h2>
+      <div style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>股票代码</th>
+              <th>股票名称</th>
+              <th>连板天数</th>
+              <th>涨停类型</th>
+              <th>换手率</th>
+              <th>涨跌幅</th>
+              <th>涨停概率 p_limit_up</th>
+              <th>保存</th>
+            </tr>
+          </thead>
+          <tbody id="tblCandidates"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>待编辑候选列表</h2>
-    <div style="overflow:auto">
-      <table>
-        <thead>
-          <tr>
-            <th>symbol</th>
-            <th>name</th>
-            <th>high_days</th>
-            <th>limit_up_type</th>
-            <th>turnover_rate</th>
-            <th>change_rate</th>
-            <th>p_limit_up</th>
-            <th>保存</th>
-          </tr>
-        </thead>
-        <tbody id="tblCandidates"></tbody>
-      </table>
+  <!-- 视图：模型推荐 -->
+  <div class="view" id="viewReco">
+    <div class="card">
+      <h2>推荐查询</h2>
+      <div class="row">
+        <div style="flex:1;min-width:260px">
+          <div class="hint">按“涨停池交易日(T)”查询（YYYY-MM-DD 或 YYYYMMDD，可空）</div>
+          <input class="input mono" id="inpTradingDay" placeholder="例如：2026-01-15" />
+        </div>
+        <div style="flex:1;min-width:260px">
+          <div class="hint">按“决策日(T+1)”查询（YYYY-MM-DD 或 YYYYMMDD，可空）</div>
+          <input class="input mono" id="inpDecisionDay" placeholder="例如：2026-01-16" />
+        </div>
+        <button class="btn" id="btnRecoQuery">查询</button>
+        <button class="btn" id="btnRecoClear">清空筛选</button>
+        <button class="btn" id="btnRecoRefresh">刷新</button>
+      </div>
+      <div style="height:10px"></div>
+      <div class="hint" id="recoHint">
+        默认行为：不填任何日期时，展示库里“最新一批”模型推荐（由后端自动选择最新可用的决策日）。
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>模型推荐结果</h2>
+      <div class="row" style="margin-bottom:10px">
+        <span class="badge" id="recoMeta">未加载</span>
+      </div>
+      <div style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>股票代码</th>
+              <th>动作</th>
+              <th>评分</th>
+              <th>置信度</th>
+              <th>涨停池交易日(T)</th>
+              <th>决策日(T+1)</th>
+              <th>生成时间</th>
+              <th>证据/理由</th>
+            </tr>
+          </thead>
+          <tbody id="tblReco"></tbody>
+        </table>
+      </div>
+      <div class="hint" style="margin-top:10px">
+        说明：证据字段来自后端 <span class="mono">evidence</span>，用于解释模型输出（reason_code / reason_text / evidence_fields / evidence_refs）。
+      </div>
     </div>
   </div>
 </div>
@@ -137,10 +268,24 @@
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-  const selBatch = $('#selBatch');
-  const tbl = $('#tblCandidates');
   const pillDot = $('#pillDot');
   const pillText = $('#pillText');
+
+  const viewPool = $('#viewPool');
+  const viewReco = $('#viewReco');
+
+  const pageTitle = $('#pageTitle');
+  const pageSubTitle = $('#pageSubTitle');
+
+  // pool elements
+  const selBatch = $('#selBatch');
+  const tbl = $('#tblCandidates');
+
+  // reco elements
+  const inpTradingDay = $('#inpTradingDay');
+  const inpDecisionDay = $('#inpDecisionDay');
+  const tblReco = $('#tblReco');
+  const recoMeta = $('#recoMeta');
 
   function escapeHtml(s) {
     return String(s ?? '').replace(/[&<>"']/g, (m) => ({
@@ -191,6 +336,9 @@
     }
   }
 
+  // ---------------------------
+  // 候选池编辑（原逻辑保留）
+  // ---------------------------
   async function loadBatches() {
     const batches = await apiGet('/pool/batches?limit=50');
     const opts = (batches || []).map(b => {
@@ -245,19 +393,19 @@
         const v = (input.value || '').trim();
 
         if (v === '') {
-          showToast('未填写', 'p_limit_up 必须填写后再保存（保存代表完成编辑）。');
+          showToast('未填写', '涨停概率 p_limit_up 必须填写后再保存（保存代表完成编辑）。');
           return;
         }
         const n = Number(v);
         if (!Number.isFinite(n) || n < 0 || n > 1) {
-          showToast('格式错误', 'p_limit_up 必须是 0~1 的小数');
+          showToast('格式错误', '涨停概率 p_limit_up 必须是 0~1 的小数');
           return;
         }
 
         try {
           btn.disabled = true;
           await apiPatch(`/pool/batches/${encodeURIComponent(batchId)}/candidates/${encodeURIComponent(symbol)}`, { p_limit_up: n });
-          showToast('已保存', `${symbol} p_limit_up=${n}`);
+          showToast('已保存', `${symbol} 涨停概率=${n}`);
           await loadCandidates(); // 重新加载 -> 该条会消失
         } catch (e) {
           showToast('保存失败', String(e));
@@ -268,6 +416,159 @@
     });
   }
 
+  // ---------------------------
+  // 模型推荐
+  // ---------------------------
+  function fmtTs(iso) {
+    const s = String(iso || '').trim();
+    if (!s) return '';
+    try {
+      const d = new Date(s);
+      if (Number.isNaN(d.getTime())) return s;
+      return d.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
+    } catch {
+      return s;
+    }
+  }
+
+  function actionToZh(a) {
+    const x = String(a || '').trim().toUpperCase();
+    const mp = {
+      'BUY': '买入',
+      'SELL': '卖出',
+      'HOLD': '观望',
+      'WATCH': '观察',
+      'LONG': '做多',
+      'SHORT': '做空',
+      'NO_TRADE': '不交易',
+    };
+    return mp[x] || (a || '');
+  }
+
+  function badgeForAction(a) {
+    const x = String(a || '').trim().toUpperCase();
+    if (x === 'BUY' || x === 'LONG') return 'good';
+    if (x === 'SELL' || x === 'SHORT') return 'bad';
+    return 'warn';
+  }
+
+  function safeJson(v) {
+    try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+  }
+
+  async function loadRecommendations(opts = {}) {
+    const { tradingDay, decisionDay } = opts || {};
+    const qs = [];
+    if (tradingDay) qs.push(`trading_day=${encodeURIComponent(tradingDay)}`);
+    else if (decisionDay) qs.push(`day=${encodeURIComponent(decisionDay)}`);
+    qs.push(`limit=50`);
+    const url = `/recommendations${qs.length ? ('?' + qs.join('&')) : ''}`;
+
+    recoMeta.textContent = '加载中…';
+    recoMeta.className = 'badge';
+
+    try {
+      const items = await apiGet(url);
+
+      const metaText = (() => {
+        if (tradingDay) return `已加载 · 按涨停池交易日(T)=${tradingDay} · 共 ${items.length} 条`;
+        if (decisionDay) return `已加载 · 按决策日(T+1)=${decisionDay} · 共 ${items.length} 条`;
+        return `已加载 · 默认最新一批 · 共 ${items.length} 条`;
+      })();
+
+      recoMeta.textContent = metaText;
+      recoMeta.classList.add(items.length ? 'good' : 'warn');
+
+      const rows = (items || []).map(d => {
+        const evs = Array.isArray(d.evidence) ? d.evidence : [];
+        const evCount = evs.length;
+
+        const evHtml = evCount ? `
+          <details>
+            <summary>查看证据（${evCount}）</summary>
+            ${evs.map((e, idx) => {
+              const reasonCode = e && e.reason_code ? String(e.reason_code) : '';
+              const reasonText = e && e.reason_text ? String(e.reason_text) : '';
+              const fields = e ? e.evidence_fields : null;
+              const refs = e ? e.evidence_refs : null;
+              const block = [
+                `#${idx+1}`,
+                reasonCode ? `理由编码：${reasonCode}` : '',
+                reasonText ? `理由说明：${reasonText}` : '',
+                (fields !== null && fields !== undefined) ? `证据字段：${safeJson(fields)}` : '',
+                (refs !== null && refs !== undefined) ? `证据引用：${safeJson(refs)}` : '',
+              ].filter(Boolean).join('\n');
+              return `<div class="pre">${escapeHtml(block)}</div>`;
+            }).join('')}
+          </details>
+        ` : `<span class="hint">无</span>`;
+
+        const actZh = actionToZh(d.action);
+        const badgeKind = badgeForAction(d.action);
+
+        return `<tr>
+          <td class="mono">${escapeHtml(d.symbol)}</td>
+          <td><span class="badge ${badgeKind}">${escapeHtml(actZh)}</span></td>
+          <td class="mono">${escapeHtml((d.score ?? '').toString())}</td>
+          <td class="mono">${escapeHtml((d.confidence ?? '').toString())}</td>
+          <td class="mono">${escapeHtml(d.trading_day || '')}</td>
+          <td class="mono">${escapeHtml(d.decision_day || '')}</td>
+          <td class="mono">${escapeHtml(fmtTs(d.created_ts))}</td>
+          <td style="min-width:260px">${evHtml}</td>
+        </tr>`;
+      }).join('');
+
+      tblReco.innerHTML = rows || `<tr><td colspan="8" class="hint">暂无推荐数据</td></tr>`;
+    } catch (e) {
+      recoMeta.textContent = '加载失败';
+      recoMeta.className = 'badge bad';
+      tblReco.innerHTML = `<tr><td colspan="8" class="hint">加载失败：${escapeHtml(String(e))}</td></tr>`;
+      showToast('加载失败', String(e));
+    }
+  }
+
+  // ---------------------------
+  // 简易“路由”（hash 页签）
+  // ---------------------------
+  function setNavActive(route) {
+    $$('#nav a[data-route]').forEach(a => {
+      const r = a.getAttribute('data-route');
+      a.classList.toggle('active', r === route);
+    });
+  }
+
+  async function routeTo(route) {
+    const r = route || 'pool';
+
+    viewPool.classList.toggle('active', r === 'pool');
+    viewReco.classList.toggle('active', r === 'reco');
+    setNavActive(r);
+
+    if (r === 'pool') {
+      pageTitle.textContent = '候选池';
+      pageSubTitle.textContent = '只做一件事：编辑涨停概率 p_limit_up（保存后即从列表消失）';
+    } else if (r === 'reco') {
+      pageTitle.textContent = '模型推荐';
+      pageSubTitle.textContent = '默认展示最新一批推荐（库中最新可用的决策日）';
+      // 进入推荐页时，若还没加载过或当前表为空，就加载一次默认数据
+      const hasRows = tblReco && tblReco.querySelectorAll('tr').length > 0;
+      if (!hasRows) {
+        await loadRecommendations({});
+      }
+    }
+  }
+
+  function getRouteFromHash() {
+    const h = (location.hash || '').trim();
+    if (!h || h === '#') return 'pool';
+    // 支持 #/pool 形式
+    const m = h.match(/^#\/([a-zA-Z0-9_-]+)/);
+    return (m && m[1]) ? m[1] : 'pool';
+  }
+
+  // ---------------------------
+  // 初始化
+  // ---------------------------
   async function init() {
     await refreshPill();
     await loadBatches();
@@ -284,13 +585,59 @@
         const btn = $('#btnCommit');
         btn.disabled = true;
         await apiPost(`/pool/batches/${encodeURIComponent(batchId)}/commit`, {});
-        showToast('已提交', `batch=${batchId} 已 COMMITTED`);
+        showToast('已提交', `批次=${batchId} 已 COMMITTED`);
       } catch (e) {
         showToast('提交失败', String(e));
       } finally {
         $('#btnCommit').disabled = false;
       }
     };
+
+    // reco actions
+    $('#btnRecoQuery').onclick = async () => {
+      const td = (inpTradingDay.value || '').trim();
+      const dd = (inpDecisionDay.value || '').trim();
+
+      if (td && dd) {
+        showToast('筛选冲突', '请只填写一个：涨停池交易日(T) 或 决策日(T+1)。');
+        return;
+      }
+      if (td) {
+        await loadRecommendations({ tradingDay: td });
+      } else if (dd) {
+        await loadRecommendations({ decisionDay: dd });
+      } else {
+        await loadRecommendations({});
+      }
+    };
+
+    $('#btnRecoClear').onclick = async () => {
+      inpTradingDay.value = '';
+      inpDecisionDay.value = '';
+      await loadRecommendations({});
+    };
+
+    $('#btnRecoRefresh').onclick = async () => {
+      const td = (inpTradingDay.value || '').trim();
+      const dd = (inpDecisionDay.value || '').trim();
+      if (td) return loadRecommendations({ tradingDay: td });
+      if (dd) return loadRecommendations({ decisionDay: dd });
+      return loadRecommendations({});
+    };
+
+    // hash routing
+    const onHash = async () => {
+      const r = getRouteFromHash();
+      await routeTo(r);
+    };
+    window.addEventListener('hashchange', () => { onHash().catch(() => {}); });
+
+    // 默认路由
+    if (!location.hash || location.hash === '#') {
+      location.hash = '#/pool';
+    } else {
+      await onHash();
+    }
 
     // 只做“自动”刷新后端连通性提示，不提供任何手动刷新按钮
     setInterval(refreshPill, 15000);
