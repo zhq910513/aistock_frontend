@@ -78,7 +78,7 @@
     <div class="brand">
       <div class="logo">S³</div>
       <div class="title">
-        <h1>候选池编辑</h1>
+        <h1>候选池</h1>
         <p>只做一件事：编辑 p_limit_up（保存后即从列表消失）</p>
       </div>
     </div>
@@ -92,7 +92,7 @@
     <h2>批次</h2>
     <div class="row">
       <div style="flex:1;min-width:260px">
-        <div class="hint">选择 batch（默认最新）</div>
+        <div class="hint">选择 数据批次（默认最新）</div>
         <select class="input" id="selBatch"></select>
       </div>
       <button class="btn" id="btnCommit">提交 commit</button>
@@ -197,7 +197,7 @@
       const label = `${b.trading_day || ''} · ${b.batch_id} · ${b.status || ''}`;
       return `<option value="${escapeHtml(b.batch_id)}">${escapeHtml(label)}</option>`;
     }).join('');
-    selBatch.innerHTML = opts || `<option value="">暂无 batch</option>`;
+    selBatch.innerHTML = opts || `<option value="">暂无 数据</option>`;
     if (!selBatch.value && selBatch.options.length > 0) selBatch.value = selBatch.options[0].value;
   }
 
